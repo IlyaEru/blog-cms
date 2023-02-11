@@ -14,9 +14,12 @@ export default function Routes() {
     <HashRouter>
       <Navbar />
       <ReactRoutes>
-        <Route path="/" element={<Home />} />
+        <Route path="/" element={!isAuthenticated ? <Login /> : <Home />} />
         <Route path="/login" element={<Login />} />
-        <Route path="/posts/:postId" element={<PostDetails />} />
+        <Route
+          path="/posts/:postId"
+          element={!isAuthenticated ? <Login /> : <PostDetails />}
+        />
         <Route
           path="/new-post"
           element={!isAuthenticated ? <Login /> : <NewPost />}
