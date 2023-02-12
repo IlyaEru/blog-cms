@@ -74,6 +74,17 @@ const deletePost = async (postId: string) => {
   return { status: deleteResponse.status, data: deleteResponse.data.post };
 };
 
+const getPostsComments = async (postId: string) => {
+  try {
+    const { data, status } = await axios.get(
+      `${baseUrl}/api/v1/comments?postId=${postId}`,
+    );
+    return { status, comments: data.comments };
+  } catch (error: any) {
+    return { status: error.status, comments: [] };
+  }
+};
+
 const isSuccessfulResponse = (
   response: SuccessPostResponse | ErrorPostResponse,
 ): response is SuccessPostResponse => {
@@ -88,4 +99,5 @@ export {
   deletePost,
   updatePost,
   isSuccessfulResponse,
+  getPostsComments,
 };

@@ -196,4 +196,11 @@ const decryptToken = (token: string): any => {
   return JSON.parse(window.atob(base64));
 };
 
-export { login, logout, postWithAuth, decryptToken, putWithAuth };
+export {
+  login,
+  logout,
+  postWithAuth,
+  decryptToken,
+  putWithAuth,
+  getAccessToken,
+};

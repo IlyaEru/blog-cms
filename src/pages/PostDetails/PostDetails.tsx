@@ -3,12 +3,15 @@ import { useContext, useEffect, useState } from 'react';
 import { Button, Card, ListGroup, Modal, Spinner } from 'react-bootstrap';
 import { NavLink, useNavigate, useParams } from 'react-router-dom';
 import { AuthContext } from '../../App';
+import { deleteComment } from '../../helpers/comment';
 import {
   deletePost,
   getPostById,
+  getPostsComments,
   publishPost,
   unpublishPost,
 } from '../../helpers/post';
+import { CommentDocument } from '../../types/comment.types';
 import { Post } from '../../types/post.types';
 
 export default function PostDetails() {
@@ -16,6 +19,10 @@ export default function PostDetails() {
   const [postData, setPostData] = useState<Post | null>(null);
   const [isLoadingPostData, setIsLoadingPostData] = useState(true);
   const [isDeleteModalShown, setIsDeleteModalShown] = useState(false);
+  const [comments, setComments] = useState({
+    comments: [] as CommentDocument[],
+    isLoading: true,
+  });
 
   const navigate = useNavigate();
   const { isAuthenticated, setIsLoading } = useContext(AuthContext);
@@ -28,8 +35,16 @@ export default function PostDetails() {
         setIsLoadingPostData(false);
       }
     };
+    const fetchComments = async (postId: string) => {
+      setComments({ comments: [], isLoading: true });
+      const { status, comments } = await getPostsComments(postId);
+
+      setComments({ comments, isLoading: false });
+    };
+
     if (postId && typeof postId === 'string') {
       fetchPost(postId);
+      fetchComments(postId);
     } else {
       navigate('/');
     }
@@ -70,6 +85,24 @@ export default function PostDetails() {
       const deleteResponse = await deletePost(postData._id);
       if (deleteResponse.status === 204) {
         navigate('/');
+      }
+    } catch (error) {
+      console.log(error);
+    }
+    setIsLoading(false);
+  };
+
+  const handleCommentDelete = async (commentId: string) => {
+    setIsLoading(true);
+    try {
+      const deleteResponse = await deleteComment(commentId);
+      if (deleteResponse.status === 204) {
+        setComments({
+          comments: comments.comments.filter(
+            (comment) => comment._id !== commentId,
+          ),
+          isLoading: false,
+        });
       }
     } catch (error) {
       console.log(error);
@@ -130,13 +163,35 @@ export default function PostDetails() {
               </>
             </>
           )}
-          <Card.Title className="mt-3 ">Comment</Card.Title>
+          <Card.Title className="mt-3 ">Comments</Card.Title>
+
           <ListGroup className="list-group-flush">
-            {postData.comments.length > 0 ? (
-              postData.comments.map((comment, index) => (
+            {comments.isLoading ? (
+              <Spinner animation="grow" variant="primary" />
+            ) : comments.comments.length > 0 ? (
+              comments.comments.map((comment, index) => (
                 <ListGroup.Item key={index}>
-                  <span className="text-transform-uppercase">Comment: </span>
-                  {comment}
+                  <div className="comment-content__wrapper">
+                    {comment.body}
+                    <br />
+                    <span className="text-muted">
+                      Comment by {comment.name} at {}
+                      {moment(comment.createdAt).format(
+                        'dddd, MMMM Do YYYY, h:mm:ss a',
+                      )}
+                    </span>
+                  </div>
+                  {isAuthenticated && (
+                    <Button
+                      onClick={() => {
+                        handleCommentDelete(comment._id);
+                      }}
+                      className="mt-2"
+                      variant="danger"
+                    >
+                      Delete Comment
+                    </Button>
+                  )}
                 </ListGroup.Item>
               ))
             ) : (
