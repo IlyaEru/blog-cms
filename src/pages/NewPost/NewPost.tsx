@@ -52,7 +52,7 @@ export default function NewPost() {
     const error = validateNewPostForm(title, body);
     if (error) {
       setNewPostFormError(error.details.map((detail) => detail.message));
-
+      setIsLoading(false);
       return;
     }
     if (postId) {
